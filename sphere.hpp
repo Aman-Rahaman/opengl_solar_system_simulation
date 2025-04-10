@@ -1,3 +1,5 @@
+
+
 #ifndef DATA_TYPES_HPP
 #define DATA_TYPES_HPP
 
@@ -47,21 +49,6 @@ class Sphere {
         static float sun_rot_angle      ;
         static float moon_rot_angle     ;
         static float space_rot_angle    ;
-
-        static float earth_rev_radius   ;
-        static float sun_rev_radius     ;
-        static float moon_rev_radius    ;
-        static float space_rev_radius   ;
-        
-        static float earth_rev_speed    ;
-        static float sun_rev_speed      ;
-        static float moon_rev_speed     ;
-        static float space_rev_speed    ;
-        
-        static float earth_rot_speed    ;
-        static float sun_rot_speed      ;
-        static float moon_rot_speed     ;
-        static float space_rot_speed    ;
 
         static glm::vec3 earth_P0    ;
         static glm::vec3 earth_P1    ;
@@ -319,26 +306,26 @@ class Sphere {
             float y = 0; // Keep it at the same height
 
             if(type == EARTH){
-                x = earth_rev_radius * cos(earth_rev_angle);
-                z = earth_rev_radius * sin(earth_rev_angle);
+                x = EARTH_REV_RADIUS * cos(earth_rev_angle);
+                z = EARTH_REV_RADIUS * sin(earth_rev_angle);
             }
             else if(type == SUN){
-                x = sun_rev_radius * cos(sun_rev_angle);
-                z = sun_rev_radius * sin(sun_rev_angle);
+                x = SUN_REV_RADIUS * cos(sun_rev_angle);
+                z = SUN_REV_RADIUS * sin(sun_rev_angle);
             }
             else if(type == MOON){
-                x = moon_rev_radius * cos(moon_rev_angle);
-                z = moon_rev_radius * sin(moon_rev_angle);
+                x = MOON_REV_RADIUS * cos(moon_rev_angle);
+                z = MOON_REV_RADIUS * sin(moon_rev_angle);
             }
             else if(type == SPACE){
-                x = space_rev_speed * cos(space_rev_angle);
-                z = space_rev_speed * sin(space_rev_angle);
+                x = SPACE_REV_SPEED * cos(space_rev_angle);
+                z = SPACE_REV_SPEED * sin(space_rev_angle);
             }
             transform = glm::translate(transform, glm::vec3(x, y, z));
 
             if(type == MOON){
-                x = earth_rev_radius * cos(earth_rev_angle);
-                z = earth_rev_radius * sin(earth_rev_angle);
+                x = EARTH_REV_RADIUS * cos(earth_rev_angle);
+                z = EARTH_REV_RADIUS * sin(earth_rev_angle);
                 transform = glm::translate(transform, glm::vec3(x, y, z));
             }
 
@@ -390,17 +377,17 @@ class Sphere {
 
         static void update_angles() {
 
-            earth_rev_angle += earth_rev_speed;
-            earth_rot_angle += earth_rot_speed;
+            earth_rev_angle += EARTH_REV_SPEED;
+            earth_rot_angle += EARTH_ROT_SPEED;
 
-            sun_rev_angle += sun_rev_speed;
-            sun_rot_angle += sun_rot_speed;
+            sun_rev_angle += SUN_REV_SPEED;
+            sun_rot_angle += SUN_ROT_SPEED;
 
-            moon_rev_angle += moon_rev_speed;
-            moon_rot_angle += moon_rot_speed;
+            moon_rev_angle += MOON_REV_SPEED;
+            moon_rot_angle += MOON_ROT_SPEED;
 
-            space_rev_angle += space_rev_speed;
-            space_rot_angle += space_rot_speed;
+            space_rev_angle += SPACE_REV_SPEED;
+            space_rot_angle += SPACE_ROT_SPEED;
             
         }
 
@@ -424,8 +411,8 @@ class Sphere {
         static void set_spline(){
             motionType = SPLINE;
 
-            float x = earth_rev_radius * cos(earth_rev_angle);
-            float z = earth_rev_radius * sin(earth_rev_angle);
+            float x = EARTH_REV_RADIUS * cos(earth_rev_angle);
+            float z = EARTH_REV_RADIUS * sin(earth_rev_angle);
             float y = 0.0f;
 
             glm::vec3 earth_posistion(x, y, z);

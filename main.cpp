@@ -30,21 +30,6 @@ float Sphere::sun_rot_angle;
 float Sphere::moon_rot_angle;
 float Sphere::space_rot_angle;
 
-float Sphere::earth_rev_radius;
-float Sphere::sun_rev_radius;
-float Sphere::moon_rev_radius;
-float Sphere::space_rev_radius;
-
-float Sphere::earth_rev_speed;
-float Sphere::sun_rev_speed;
-float Sphere::moon_rev_speed;
-float Sphere::space_rev_speed;
-
-float Sphere::earth_rot_speed;
-float Sphere::sun_rot_speed;
-float Sphere::moon_rot_speed;
-float Sphere::space_rot_speed;
-
 MotionType Sphere::motionType;
 
 glm::vec3 Sphere::earth_P0;
@@ -64,21 +49,6 @@ void Sphere::initialize_config_variables(){
     Sphere::sun_rot_angle   = 0.0f;
     Sphere::moon_rot_angle  = 0.0f;
     Sphere::space_rot_angle = 0.0f;
-
-    Sphere::earth_rev_radius = EARTH_REV_RADIUS;
-    Sphere::sun_rev_radius   = SUN_REV_RADIUS;
-    Sphere::moon_rev_radius  = MOON_REV_RADIUS;
-    Sphere::space_rev_radius = SPACE_REV_RADIUS;
-
-    Sphere::earth_rev_speed = EARTH_REV_SPEED;
-    Sphere::sun_rev_speed   = SUN_REV_SPEED;
-    Sphere::moon_rev_speed  = MOON_REV_SPEED;
-    Sphere::space_rev_speed = SPACE_REV_SPEED;
-
-    Sphere::earth_rot_speed = EARTH_ROT_SPEED;
-    Sphere::sun_rot_speed   = SUN_ROT_SPEED;
-    Sphere::moon_rot_speed  = MOON_ROT_SPEED;
-    Sphere::space_rot_speed = SPACE_ROT_SPEED;
 
     Sphere::motionType = ORBIT;
 }
