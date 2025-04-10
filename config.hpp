@@ -8,12 +8,12 @@
 
 #define EARTH_REV_RADIUS    8.0f
 #define SUN_REV_RADIUS      0.0f
-#define MOON_REV_RADIUS     1.0f
+#define MOON_REV_RADIUS     2.0f
 #define SPACE_REV_RADIUS    0.0f
 
 #define EARTH_REV_SPEED     0.005f
 #define SUN_REV_SPEED       0.0f
-#define MOON_REV_SPEED      0.028f
+#define MOON_REV_SPEED      0.015f
 #define SPACE_REV_SPEED     0.0f
 
 

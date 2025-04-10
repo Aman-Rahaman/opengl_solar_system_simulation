@@ -32,6 +32,8 @@ class Sphere {
         float deltaTime = 0.001f;
         float t = 0.0f;
 
+        float scaling = 1.0f;
+
         float size = 1.0f;
         vector<float> verticesInfo;
         GLuint VBO, VAO, EBO;
@@ -54,6 +56,11 @@ class Sphere {
         static glm::vec3 earth_P1    ;
         static glm::vec3 earth_P2    ;
         static glm::vec3 earth_P3    ;
+
+        static glm::vec3 moon_P0    ;
+        static glm::vec3 moon_P1    ;
+        static glm::vec3 moon_P2    ;
+        static glm::vec3 moon_P3    ;
 
 
         float calculateColor(float c){
@@ -280,7 +287,13 @@ class Sphere {
             if(this->t >= 1.0f)
                 this->t = 1.0f;
             
-            glm::vec3 position = bezier(earth_P0, earth_P1, earth_P2, earth_P3, t);
+            glm::vec3 position;
+            if(type == EARTH){
+                position = bezier(earth_P0, earth_P1, earth_P2, earth_P3, t);
+            }
+            else if(type == MOON){
+                position = bezier(moon_P0, moon_P1, moon_P2, moon_P3, t);
+            }
             
             glm::mat4 transform = glm::mat4(1.0f);
             transform = glm::translate(transform, position);
@@ -289,7 +302,7 @@ class Sphere {
                 transform = glm::rotate(transform, earth_rot_angle, glm::vec3(0.0f, 1.0f, 0.0f));
                 transform = glm::rotate(transform, 0.41f, glm::vec3(0.0f, 0.0f, 1.0f));
             }
-            if(type == MOON)
+            else if(type == MOON)
                 transform = glm::rotate(transform, moon_rot_angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
             int transformLoc = glGetUniformLocation(shaderProgram, "transform");
@@ -345,6 +358,11 @@ class Sphere {
             if(type == EARTH) 
                 transform = glm::rotate(transform, 0.41f, glm::vec3(0.0f, 0.0f, 1.0f));
 
+
+            if(type==SUN && motionType==SPLINE)
+                this->scaling += this->deltaTime;
+            transform = glm::scale(transform, glm::vec3(this->scaling, this->scaling, this->scaling));
+
             
             int transformLoc = glGetUniformLocation(shaderProgram, "transform");
             glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
@@ -394,7 +412,7 @@ class Sphere {
         void render() {
             bindTexture();
 
-            if(motionType==SPLINE && type==EARTH){
+            if(motionType==SPLINE && (type==EARTH || type==MOON)){
                 set_tranform_matrix_spline();
             }
             else{
@@ -410,28 +428,52 @@ class Sphere {
         
         static void set_spline(){
             motionType = SPLINE;
+            float tangent_distance_earth = 12.0f;
+            float tangent_distance_moon = 8.0f;
+
+
 
             float x = EARTH_REV_RADIUS * cos(earth_rev_angle);
             float z = EARTH_REV_RADIUS * sin(earth_rev_angle);
             float y = 0.0f;
 
             glm::vec3 earth_posistion(x, y, z);
-
-            float tangent_distance = 12.0f;
-
             earth_P0 = earth_posistion;
             
             glm::vec3 r = earth_P0;         // Vector from Sun to Earth
             glm::vec3 tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); // Tangent vector in the orbit plane
-            earth_P1 = earth_P0 + tangent * tangent_distance;
+            earth_P1 = earth_P0 + tangent * tangent_distance_earth;
 
-            r = earth_P1;         // Vector from Sun to Earth
-            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); // Tangent vector in the orbit plane
-            earth_P2 = earth_P1 + tangent * tangent_distance;
+            r = earth_P1;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); 
+            earth_P2 = earth_P1 + tangent * tangent_distance_earth;
 
-            r = earth_P2;         // Vector from Sun to Earth
+            r = earth_P2;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f)));
+            earth_P3 = earth_P2 + tangent * tangent_distance_earth;
+
+
+
+            x = MOON_REV_RADIUS * cos(moon_rev_angle);
+            z = MOON_REV_RADIUS * sin(moon_rev_angle);
+            y = 0.0f;
+
+            glm::vec3 moon_posistion(x, y, z);
+            moon_posistion = moon_posistion + earth_posistion;
+            moon_P0 = moon_posistion;
+            
+            r = moon_P0;         // Vector from Sun to moon
             tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); // Tangent vector in the orbit plane
-            earth_P3 = earth_P2 + tangent * tangent_distance;
+            moon_P1 = moon_P0 + tangent * tangent_distance_moon;
+
+            r = moon_P1;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); 
+            moon_P2 = moon_P1 + tangent * tangent_distance_moon;
+
+            r = earth_P2;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f)));
+            moon_P3 = moon_P2 + tangent * tangent_distance_moon;
+
         }
 };
 

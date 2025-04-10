@@ -37,6 +37,11 @@ glm::vec3 Sphere::earth_P1;
 glm::vec3 Sphere::earth_P2;
 glm::vec3 Sphere::earth_P3;
 
+glm::vec3 Sphere::moon_P0;
+glm::vec3 Sphere::moon_P1;
+glm::vec3 Sphere::moon_P2;
+glm::vec3 Sphere::moon_P3;
+
 
 void Sphere::initialize_config_variables(){
     // Initialize static members
