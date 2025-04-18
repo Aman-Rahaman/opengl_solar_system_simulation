@@ -42,6 +42,11 @@ glm::vec3 Sphere::moon_P1;
 glm::vec3 Sphere::moon_P2;
 glm::vec3 Sphere::moon_P3;
 
+bool     Sphere::earth_moon_collision;
+float    Sphere::earth_t             ;
+float    Sphere::moon_t              ;
+float    Sphere::deltaTime           ;
+
 
 void Sphere::initialize_config_variables(){
     // Initialize static members
@@ -56,6 +61,11 @@ void Sphere::initialize_config_variables(){
     Sphere::space_rot_angle = 0.0f;
 
     Sphere::motionType = ORBIT;
+
+    Sphere::earth_moon_collision    = false;
+    Sphere::earth_t                 = 0.0f;
+    Sphere::moon_t                  = 0.0f;
+    Sphere::deltaTime               = 0.001f;
 }
 
 
@@ -63,26 +73,25 @@ void Sphere::initialize_config_variables(){
 
 // Callback function to handle key input
 void processInput(GLFWwindow* window) {
-    const float cameraSpeed = 0.05f;
     float angle = glm::radians(1.0f);
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            cameraAngleY -= cameraSpeed;
+            cameraAngleY -= CAMERA_SPEED;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            cameraAngleY += cameraSpeed;
+            cameraAngleY += CAMERA_SPEED;
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            cameraAngleX -= cameraSpeed;
+            cameraAngleX -= CAMERA_SPEED;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            cameraAngleX += cameraSpeed;
+            cameraAngleX += CAMERA_SPEED;
         }
         if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-            cameraAngleZ += cameraSpeed;
+            cameraAngleZ += CAMERA_SPEED;
         }
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-            cameraAngleZ -= cameraSpeed;
+            cameraAngleZ -= CAMERA_SPEED;
         }
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
             cameraRadius -= 0.1f;
@@ -111,7 +120,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         cameraRadius = CAMERA_RADIUS;
     }
     else if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+        if(pauseSimulation) return;
         Sphere::set_spline();
+    }
+    else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 
 }
@@ -184,10 +197,10 @@ int main() {
 
     Sphere::initialize_config_variables();
 
-    Sphere earth(1.0f, EARTH, 5);
-    Sphere sun(5.0f, SUN, 5);  
-    Sphere moon(0.25f, MOON, 5);
-    Sphere space(50.0f, SPACE, 3); // for starry sky
+    Sphere earth(EARTH_RADIUS, EARTH, EARTH_TESSELLATION);
+    Sphere sun(SUN_RADIUS, SUN, SUN_TESSELLATION);  
+    Sphere moon(MOON_RADIUS, MOON, MOON_TESSELLATION);
+    Sphere space(SPACE_RADIUS, SPACE, SPACE_TESSELLATION); // for starry sky
     
 
     glUseProgram(shaderProgram);    // Use the shader program

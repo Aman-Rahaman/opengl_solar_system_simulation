@@ -29,9 +29,6 @@ enum MotionType { ORBIT, SPLINE };
 class Sphere {
     private:
         static MotionType motionType;
-        float deltaTime = 0.001f;
-        float t = 0.0f;
-
         float scaling = 1.0f;
 
         float size = 1.0f;
@@ -62,6 +59,10 @@ class Sphere {
         static glm::vec3 moon_P2    ;
         static glm::vec3 moon_P3    ;
 
+        static bool     earth_moon_collision;
+        static float    earth_t             ;
+        static float    moon_t              ;
+        static float    deltaTime           ;
 
         float calculateColor(float c){
             return (abs(c) + 0.5f);
@@ -277,22 +278,35 @@ class Sphere {
         }
 
 
-        glm::vec3 bezier(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t) {
+        static glm::vec3 bezier(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t) {
             float u = 1 - t;
             return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
         }
 
+        static glm::vec3 bezierDerivative(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float t) {
+            float u = 1 - t;
+            return
+                    (
+                        3.0f * u * u * (p1 - p0) +
+                        6.0f * u * t * (p2 - p1) +
+                        3.0f * t * t * (p3 - p2)
+                    );
+        }
+
         void set_tranform_matrix_spline(){
-            this->t += this->deltaTime;
-            if(this->t >= 1.0f)
-                this->t = 1.0f;
-            
             glm::vec3 position;
+
             if(type == EARTH){
-                position = bezier(earth_P0, earth_P1, earth_P2, earth_P3, t);
+                earth_t += deltaTime;
+                if(earth_t >= 1.0f)
+                    earth_t = 1.0f;
+                position = bezier(earth_P0, earth_P1, earth_P2, earth_P3, earth_t);
             }
             else if(type == MOON){
-                position = bezier(moon_P0, moon_P1, moon_P2, moon_P3, t);
+                moon_t += deltaTime;
+                if(moon_t >= 1.0f)
+                    moon_t = 1.0f;
+                position = bezier(moon_P0, moon_P1, moon_P2, moon_P3, moon_t);
             }
             
             glm::mat4 transform = glm::mat4(1.0f);
@@ -360,7 +374,7 @@ class Sphere {
 
 
             if(type==SUN && motionType==SPLINE)
-                this->scaling += this->deltaTime;
+                this->scaling += this->deltaTime * 1.5f;
             transform = glm::scale(transform, glm::vec3(this->scaling, this->scaling, this->scaling));
 
             
@@ -414,6 +428,9 @@ class Sphere {
 
             if(motionType==SPLINE && (type==EARTH || type==MOON)){
                 set_tranform_matrix_spline();
+                if( earth_moon_collision_check() ){
+                    set_new_spline_after_collision();
+                }
             }
             else{
                 set_tranform_matrix();
@@ -425,11 +442,76 @@ class Sphere {
 
             draw_shape();
         }
+
+        static void set_new_spline_after_collision(){
+            glm::vec3 earth_position    = bezier(earth_P0, earth_P1, earth_P2, earth_P3, earth_t);
+            glm::vec3 moon_position     = bezier(moon_P0, moon_P1, moon_P2, moon_P3, moon_t);
+            glm::vec3 L_O_C = glm::normalize(moon_position - earth_position);       // L_O_C = line of centre. line connecting the centres of 2 spheres
+
+
+            glm::vec3 earth_vel = bezierDerivative(earth_P0, earth_P1, earth_P2, earth_P3, earth_t);
+            glm::vec3 moon_vel = bezierDerivative(moon_P0, moon_P1, moon_P2, moon_P3, moon_t);
+
+
+            float earth_mass = 10.0f;  // earth mass
+            float moon_mass = 1.0f;  // moon mass
+
+
+            glm::vec3 relative_velocity = earth_vel - moon_vel;
+            float vel_along_L_O_C = glm::dot(relative_velocity, L_O_C);
+            float e = 1.0f;  // perfectly elastic
+            float j = -(1 + e) * vel_along_L_O_C / (1.0f/earth_mass + 1.0f/moon_mass);
+            glm::vec3 impulse = j * L_O_C;
+
+            
+            glm::vec3 earth_velocity = earth_vel + impulse / earth_mass;
+            glm::vec3 moon_velocity = moon_vel - impulse / moon_mass;
+
+            // ------------------------------------------------------------------------------------------------------------------
+            // finding new spline points after collision
+            motionType = SPLINE;
+            float tangent_distance_earth = 20.0f;
+            float tangent_distance_moon = 50.0f;
+
+            earth_P0 = earth_position;
+            
+            glm::vec3 r = earth_P0;         // Vector from Sun to Earth
+            glm::vec3 tangent = glm::normalize(earth_velocity); // Tangent vector in the orbit plane
+            earth_P1 = earth_P0 + tangent * tangent_distance_earth;
+
+            r = earth_P1;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); 
+            earth_P2 = earth_P1 + tangent * tangent_distance_earth;
+
+            r = earth_P2;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f)));
+            earth_P3 = earth_P2 + tangent * tangent_distance_earth;
+
+
+            moon_P0 = moon_position;
+            
+            r = moon_P0;         // Vector from Sun to moon
+            tangent = glm::normalize(moon_velocity); // Tangent vector in the orbit plane
+            moon_P1 = moon_P0 + tangent * tangent_distance_moon;
+
+            r = moon_P1;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); 
+            moon_P2 = moon_P1 + tangent * tangent_distance_moon;
+
+            r = earth_P2;         
+            tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f)));
+            moon_P3 = moon_P2 + tangent * tangent_distance_moon;
+
+            // ------------------------------------------------------------------------------------------------------------------
+            // reset the parameter 't' for the spline
+            earth_t = 0.0f;
+            moon_t = 0.0f;
+        }
         
         static void set_spline(){
             motionType = SPLINE;
-            float tangent_distance_earth = 12.0f;
-            float tangent_distance_moon = 8.0f;
+            float tangent_distance_earth = 20.0f;
+            float tangent_distance_moon = 15.0f;
 
 
 
@@ -437,8 +519,8 @@ class Sphere {
             float z = EARTH_REV_RADIUS * sin(earth_rev_angle);
             float y = 0.0f;
 
-            glm::vec3 earth_posistion(x, y, z);
-            earth_P0 = earth_posistion;
+            glm::vec3 earth_position(x, y, z);
+            earth_P0 = earth_position;
             
             glm::vec3 r = earth_P0;         // Vector from Sun to Earth
             glm::vec3 tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); // Tangent vector in the orbit plane
@@ -458,9 +540,9 @@ class Sphere {
             z = MOON_REV_RADIUS * sin(moon_rev_angle);
             y = 0.0f;
 
-            glm::vec3 moon_posistion(x, y, z);
-            moon_posistion = moon_posistion + earth_posistion;
-            moon_P0 = moon_posistion;
+            glm::vec3 moon_position(x, y, z);
+            moon_position = moon_position + earth_position;
+            moon_P0 = moon_position;
             
             r = moon_P0;         // Vector from Sun to moon
             tangent = glm::normalize(glm::cross(r, glm::vec3(0.0f, 1.0f, 0.0f))); // Tangent vector in the orbit plane
@@ -475,6 +557,26 @@ class Sphere {
             moon_P3 = moon_P2 + tangent * tangent_distance_moon;
 
         }
+
+        static bool earth_moon_collision_check(){
+            if(earth_moon_collision) return false;
+
+            glm::vec3 earth_position    = bezier(earth_P0, earth_P1, earth_P2, earth_P3, earth_t);
+            glm::vec3 moon_position     = bezier(moon_P0, moon_P1, moon_P2, moon_P3, moon_t);
+            
+            float distance = glm::length(earth_position - moon_position);
+            if (distance <= (0.5f * (EARTH_RADIUS + MOON_RADIUS)) + 0.001f) {              // this 0.5f is coming from vertices variable in the important_variables.hpp
+                // Collision detected!
+                cout << "collided" << endl;
+                earth_moon_collision = true;
+                return true;
+            }
+            return false;
+        }
+
+
+
+
 };
 
 

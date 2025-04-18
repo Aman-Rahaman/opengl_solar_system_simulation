@@ -1,0 +1,5 @@
+*.exe       # Windows executable
+*.out       # Common for Linux compiled binaries
+*.o         # Object files
+*.class     # Java compiled files
+build/      # Entire build directory
