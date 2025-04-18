@@ -152,7 +152,7 @@ int main() {
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE); 
 
     // Create a window
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Per Pixel Shading", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "outer space", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
